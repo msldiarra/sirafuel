@@ -67,7 +67,7 @@ export default function StationDetailPage() {
     return () => {
       clearFeedbackTimer()
     }
-  }, [stationId])
+  }, [stationId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function clearFeedbackTimer() {
     if (feedbackTimeoutRef.current) {
@@ -512,7 +512,7 @@ export default function StationDetailPage() {
           {(essenceStatus || gasoilStatus) && (
             <div className="mt-4 pt-4 border-t-2 border-gray-700">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Temps d'attente estimé:</span>
+                <span className="text-gray-400">Temps d&apos;attente estimé:</span>
                 <span className="font-bold text-lg text-white">
                   {essenceStatus?.waiting_time_min &&
                   essenceStatus?.waiting_time_max
@@ -530,7 +530,7 @@ export default function StationDetailPage() {
         <Card className="mb-4 p-4">
           <h3 className="font-bold text-lg mb-3 text-white">CONTRIBUER</h3>
           <p className="text-sm text-gray-400 mb-4">
-            Partagez l'état actuel de la station pour aider la communauté
+            Partagez l&apos;état actuel de la station pour aider la communauté
           </p>
 
           <div className="space-y-3">
@@ -576,7 +576,7 @@ export default function StationDetailPage() {
             {/* Queue Range Slider */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                File d'attente (0 à 12h+)
+                File d&apos;attente (0 à 12h+)
               </label>
               <div className="bg-gray-700/60 border border-gray-600 rounded-lg px-4 py-3">
                 <div className="flex items-center justify-between mb-3">

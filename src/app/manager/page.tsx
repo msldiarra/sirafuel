@@ -54,7 +54,7 @@ export default function ManagerPage() {
         supabase.removeChannel(channelRef.current)
       }
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Check if form has changes
@@ -386,10 +386,10 @@ export default function ManagerPage() {
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setShowWeightInfo(false)}
         >
-          <Card
-            className="bg-gray-800 rounded-2xl shadow-2xl border-2 border-gray-700 max-w-md w-full p-6 animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
+            <Card
+              className="bg-gray-800 rounded-2xl shadow-2xl border-2 border-gray-700 max-w-md w-full p-6 animate-scale-in"
+              onClick={(e?: React.MouseEvent<HTMLDivElement>) => e?.stopPropagation()}
+            >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <span className="text-2xl">⭐</span>
@@ -507,7 +507,7 @@ export default function ManagerPage() {
                 </div>
                 {essenceCurrent?.waiting_time_min !== null && essenceCurrent?.waiting_time_max !== null && (
                   <div className="text-xs text-gray-400 mt-1">
-                    {essenceCurrent.waiting_time_min}-{essenceCurrent.waiting_time_max} min
+                    {essenceCurrent?.waiting_time_min}-{essenceCurrent?.waiting_time_max} min
                   </div>
                 )}
               </div>
@@ -547,7 +547,7 @@ export default function ManagerPage() {
                 </div>
                 {gasoilCurrent?.waiting_time_min !== null && gasoilCurrent?.waiting_time_max !== null && (
                   <div className="text-xs text-gray-400 mt-1">
-                    {gasoilCurrent.waiting_time_min}-{gasoilCurrent.waiting_time_max} min
+                    {gasoilCurrent?.waiting_time_min}-{gasoilCurrent?.waiting_time_max} min
                   </div>
                 )}
               </div>
@@ -645,7 +645,7 @@ export default function ManagerPage() {
             {/* Waiting Time */}
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-3">
-                Temps d'attente estimé (en minutes)
+                Temps d&apos;attente estimé (en minutes)
               </label>
               <div className="bg-gray-700/60 border-2 border-gray-600 rounded-xl px-4 py-4 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -679,7 +679,7 @@ export default function ManagerPage() {
                 {(waitingTimeMin !== null || waitingTimeMax !== null) && (
                   <div className="text-center pt-2 border-t border-gray-600">
                     <span className="text-sm font-semibold text-gray-300">
-                      Temps d'attente: {waitingTimeMin ?? '?'}-{waitingTimeMax ?? '?'} min
+                      Temps d&apos;attente: {waitingTimeMin ?? '?'}-{waitingTimeMax ?? '?'} min
                     </span>
                   </div>
                 )}

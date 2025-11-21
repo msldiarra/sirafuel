@@ -21,7 +21,7 @@ export function BottomNav() {
 
   useEffect(() => {
     loadUserRole()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadUserRole() {
     try {

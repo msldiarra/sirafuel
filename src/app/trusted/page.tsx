@@ -29,7 +29,7 @@ export default function TrustedPage() {
 
   useEffect(() => {
     checkAuthAndLoadStations()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAuthAndLoadStations() {
     try {

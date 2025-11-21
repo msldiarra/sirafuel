@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadProfile()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadProfile() {
     try {
@@ -315,7 +315,7 @@ export default function ProfilePage() {
           {!profile && (
             <Card className="p-4">
               <p className="text-sm text-gray-400 mb-3">
-                Votre profil n'est pas encore créé. Contactez un administrateur pour obtenir un rôle.
+                Votre profil n&apos;est pas encore créé. Contactez un administrateur pour obtenir un rôle.
               </p>
             </Card>
           )}

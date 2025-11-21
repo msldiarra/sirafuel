@@ -58,7 +58,7 @@ export default function TrustedStationDetailPage() {
   useEffect(() => {
     checkAuthAndLoadStation()
     subscribeToUpdates()
-  }, [stationId])
+  }, [stationId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAuthAndLoadStation() {
     try {
@@ -448,7 +448,7 @@ export default function TrustedStationDetailPage() {
                 </div>
                 {essenceStatus?.waiting_time_min !== null && essenceStatus?.waiting_time_max !== null && (
                   <div className="text-xs text-gray-400 mt-1">
-                    {essenceStatus.waiting_time_min}-{essenceStatus.waiting_time_max} min
+                    {essenceStatus?.waiting_time_min}-{essenceStatus?.waiting_time_max} min
                   </div>
                 )}
               </div>
@@ -484,7 +484,7 @@ export default function TrustedStationDetailPage() {
                 </div>
                 {gasoilStatus?.waiting_time_min !== null && gasoilStatus?.waiting_time_max !== null && (
                   <div className="text-xs text-gray-400 mt-1">
-                    {gasoilStatus.waiting_time_min}-{gasoilStatus.waiting_time_max} min
+                    {gasoilStatus?.waiting_time_min}-{gasoilStatus?.waiting_time_max} min
                   </div>
                 )}
               </div>
@@ -495,7 +495,7 @@ export default function TrustedStationDetailPage() {
           {(essenceStatus || gasoilStatus) && (
             <div className="mt-4 pt-4 border-t-2 border-gray-700">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Temps d'attente estimé:</span>
+                <span className="text-gray-400">Temps d&apos;attente estimé:</span>
                 <span className="font-bold text-lg text-white">
                   {essenceStatus?.waiting_time_min &&
                   essenceStatus?.waiting_time_max
@@ -570,7 +570,7 @@ export default function TrustedStationDetailPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-bold text-gray-300">
-                  File d'attente (0 à 12h+)
+                  File d&apos;attente (0 à 12h+)
                 </label>
                 {selectedQueue && (
                   <span className="text-xs text-primary-teal bg-primary-teal/20 px-2 py-1 rounded font-semibold">
@@ -635,7 +635,7 @@ export default function TrustedStationDetailPage() {
 
             {!selectedQueue && !Object.values(selectedStatuses).some((status) => status !== null) && (
               <p className="text-xs text-center text-gray-400 mt-3">
-                ⚠️ Sélectionnez au moins un statut carburant ou une file d'attente
+                ⚠️ Sélectionnez au moins un statut carburant ou une file d&apos;attente
               </p>
             )}
 

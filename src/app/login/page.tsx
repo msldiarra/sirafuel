@@ -109,7 +109,7 @@ export default function LoginPage() {
             onClick={() => router.push('/')}
             className="text-primary-teal text-sm font-medium hover:text-teal-400 transition-colors"
           >
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </button>
         </div>
       </Card>

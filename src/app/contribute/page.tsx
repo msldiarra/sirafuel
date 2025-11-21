@@ -29,7 +29,7 @@ export default function ContributePage() {
 
   useEffect(() => {
     loadStations()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadStations() {
     try {
@@ -127,7 +127,7 @@ export default function ContributePage() {
       <header className="bg-gray-800 text-white sticky top-0 z-40 shadow-lg border-b-2 border-gray-700">
         <div className="px-4 py-3">
           <h1 className="text-2xl font-bold tracking-tight">Contribuer</h1>
-          <p className="text-sm text-gray-200">Aidez la communauté en partageant l'état des stations</p>
+          <p className="text-sm text-gray-200">Aidez la communauté en partageant l&apos;état des stations</p>
         </div>
       </header>
 

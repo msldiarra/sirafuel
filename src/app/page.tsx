@@ -64,7 +64,7 @@ export default function HomePage() {
       loadStations()
       subscribeToUpdates()
     }
-  }, [userLocation, fuelFilter, debouncedRadius])
+  }, [userLocation, fuelFilter, debouncedRadius]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRadiusChange = useCallback((newRadius: number) => {
     setRadius(newRadius)
@@ -402,7 +402,7 @@ export default function HomePage() {
             <div className="w-16 h-16 border-4 border-primary-teal border-t-transparent rounded-full animate-spin mb-4"></div>
             <div className="text-gray-300 text-center">
               <p className="font-medium mb-1">Localisation en cours...</p>
-              <p className="text-sm text-gray-400">Autorisez l'accès à votre position pour voir les stations à proximité</p>
+              <p className="text-sm text-gray-400">Autorisez l&apos;accès à votre position pour voir les stations à proximité</p>
             </div>
           </div>
         )}
@@ -470,7 +470,7 @@ export default function HomePage() {
               <div className="px-4 py-4">
                 {filteredStations.length === 0 && searchTerm && (
                   <div className="text-sm text-gray-400 mb-4">
-                    Aucune station ne correspond à « {searchTerm} ».
+                    Aucune station ne correspond à &laquo; {searchTerm} &raquo;.
                   </div>
                 )}
                 {filteredStations.map((station) => (

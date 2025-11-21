@@ -165,7 +165,7 @@ export default function AdminPage() {
           showToast('success', 'Coordonnées extraites depuis Google Maps !')
         } else if (url.length > 20 && !url.includes('goo.gl')) {
           // Only show warning if URL seems complete and not a short link
-          showToast('warning', 'Impossible d\'extraire les coordonnées. Vérifiez le format de l\'URL.')
+            showToast('warning', 'Impossible d&apos;extraire les coordonnées. Vérifiez le format de l&apos;URL.')
         }
       } catch (err) {
         console.error('Error processing Google Maps URL:', err)
@@ -176,8 +176,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     checkAuthAndLoadData()
-    subscribeToUpdates()
-  }, [activeTab])
+    const unsubscribe = subscribeToUpdates()
+    return unsubscribe
+  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAuthAndLoadData() {
     try {
@@ -240,10 +241,10 @@ export default function AdminPage() {
     )
 
     const stationsWithFuel = stationsWithStatus.filter(
-      (s) => s.statuses?.some((st) => st.availability === 'AVAILABLE')
+      (s) => s.statuses?.some((st: StationStatus) => st.availability === 'AVAILABLE')
     ).length
     const stationsOut = stationsWithStatus.filter(
-      (s) => s.statuses?.some((st) => st.availability === 'OUT')
+      (s) => s.statuses?.some((st: StationStatus) => st.availability === 'OUT')
     ).length
 
     const waitingTimes = (allStatuses || [])
@@ -255,7 +256,7 @@ export default function AdminPage() {
         : 0
 
     const stationsNoUpdate = stationsWithStatus.filter(
-      (s) => !s.statuses || s.statuses.length === 0 || s.statuses.every((st) => new Date(st.updated_at) < new Date(oneHourAgo))
+      (s) => !s.statuses || s.statuses.length === 0 || s.statuses.every((st: StationStatus) => new Date(st.updated_at) < new Date(oneHourAgo))
     ).length
 
     setStats({
@@ -514,7 +515,7 @@ export default function AdminPage() {
       await loadData()
     } catch (err: any) {
       console.error('Error importing CSV:', err)
-      alert('Erreur lors de l\'import: ' + err.message)
+      alert('Erreur lors de l&apos;import: ' + err.message)
     } finally {
       setCreating(false)
     }
@@ -1051,7 +1052,7 @@ export default function AdminPage() {
                           </Button>
                         </div>
                         <p className="text-xs text-gray-400 italic">
-                          L'utilisateur devra changer ce mot de passe lors de sa première connexion.
+                          L&apos;utilisateur devra changer ce mot de passe lors de sa première connexion.
                         </p>
                       </div>
                     </div>

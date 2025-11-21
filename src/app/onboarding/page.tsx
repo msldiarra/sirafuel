@@ -22,7 +22,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     checkAuth()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAuth() {
     try {
