@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { StationCard } from '@/components/StationCard'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Notifications } from '@/components/ui/Notifications'
 import type { Station, StationStatus } from '@/lib/supabase/types'
 import { calculateDistance } from '@/lib/utils'
 
@@ -149,9 +150,12 @@ export default function TrustedPage() {
     <div className="min-h-screen bg-gray-900 pb-20">
 
       <header className="bg-gray-800 text-white sticky top-0 z-40 shadow-lg border-b-2 border-gray-700">
-        <div className="px-4 py-3">
-          <h1 className="text-2xl font-bold tracking-tight">Rapporteur Vérifié</h1>
-          <p className="text-sm text-gray-200">Mises à jour prioritaires pour la communauté</p>
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Rapporteur Vérifié</h1>
+            <p className="text-sm text-gray-200">Mises à jour prioritaires pour la communauté</p>
+          </div>
+          <Notifications />
         </div>
       </header>
 

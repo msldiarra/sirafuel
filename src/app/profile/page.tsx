@@ -208,6 +208,65 @@ export default function ProfilePage() {
           )}
         </Card>
 
+        {/* Notifications Toggle - Only for TRUSTED_REPORTER and ADMIN */}
+        {(profile?.role === 'TRUSTED_REPORTER' || profile?.role === 'ADMIN') && (
+          <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-white mb-1">NOTIFICATIONS</h3>
+                <p className="text-sm text-gray-400">
+                  Recevoir des notifications lors des mises à jour de stations
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile?.notifications_enabled || false}
+                  onChange={async (e) => {
+                    if (!profile) return
+                    const newValue = e.target.checked
+                    const wasEnabled = profile.notifications_enabled
+
+                    // Only handle browser permissions when ENABLING (OFF -> ON)
+                    if (newValue && !wasEnabled && 'Notification' in window) {
+                      if (Notification.permission === 'granted') {
+                        showToast('success', '✓ Permission navigateur déjà active.')
+                      } else if (Notification.permission === 'denied') {
+                        showToast('warning', '⚠️ Notifications navigateur bloquées. Activez-les dans les paramètres du site.')
+                      } else {
+                        try {
+                          const permission = await Notification.requestPermission()
+                          if (permission !== 'granted') {
+                            showToast('warning', '⚠️ Notifications navigateur refusées.')
+                          } else {
+                            showToast('success', '✓ Permission navigateur accordée !')
+                          }
+                        } catch (err) {
+                          console.error('Error requesting notification permission:', err)
+                        }
+                      }
+                    }
+
+                    const { error } = await supabase
+                      .from('user_profile')
+                      .update({ notifications_enabled: newValue })
+                      .eq('id', profile.id)
+                    
+                    if (!error) {
+                      setProfile({ ...profile, notifications_enabled: newValue })
+                      showToast('success', newValue ? 'Notifications activées' : 'Notifications désactivées')
+                    } else {
+                      showToast('error', 'Erreur lors de la mise à jour')
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-teal rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-teal"></div>
+              </label>
+            </div>
+          </Card>
+        )}
+
         {/* Change Password Section - Premium */}
         {canChangePassword && (
           <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up">

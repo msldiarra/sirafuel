@@ -11,6 +11,8 @@ import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog'
 import { formatTimeAgo, getAvailabilityIcon, getAvailabilityLabel, getReliabilityLabel } from '@/lib/utils'
 import { AdminBottomNav } from '@/components/ui/AdminBottomNav'
 import { FuelStatusIcon } from '@/components/ui/FuelStatusIcon'
+import { WaitTimeTrendsChart } from '@/components/ui/WaitTimeTrendsChart'
+import { Notifications } from '@/components/ui/Notifications'
 import type { Station, StationStatus, Alert, UserProfile } from '@/lib/supabase/types'
 
 interface ToastItem {
@@ -29,8 +31,10 @@ function AdminPageContent() {
     stationsWithFuel: 0,
     stationsOut: 0,
     avgWaitingTime: 0,
+    peakWaitingTime: 0,
     stationsNoUpdate: 0,
     contributionsLast2h: 0,
+    fuelPercentageChange: 0, // vs yesterday
   })
   const [stations, setStations] = useState<(Station & { statuses?: StationStatus[] })[]>([])
   const [alerts, setAlerts] = useState<Alert[]>([])
@@ -234,18 +238,44 @@ function AdminPageContent() {
       waitingTimes.length > 0
         ? Math.round(waitingTimes.reduce((a, b) => a + b, 0) / waitingTimes.length)
         : 0
+    const peakWaitingTime = waitingTimes.length > 0 ? Math.max(...waitingTimes) : 0
 
     const stationsNoUpdate = stationsWithStatus.filter(
       (s) => !s.statuses || s.statuses.length === 0 || s.statuses.every((st: StationStatus) => new Date(st.updated_at) < new Date(oneHourAgo))
     ).length
+
+    // Calculate percentage change vs yesterday (stations with fuel)
+    const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const yesterdayStart = new Date(yesterdayDate)
+    yesterdayStart.setHours(0, 0, 0, 0)
+    const yesterdayEnd = new Date(yesterdayDate)
+    yesterdayEnd.setHours(23, 59, 59, 999)
+    
+    const { data: yesterdayStatuses } = await supabase
+      .from('station_status')
+      .select('station_id, availability')
+      .gte('updated_at', yesterdayStart.toISOString())
+      .lte('updated_at', yesterdayEnd.toISOString())
+    
+    const yesterdayStationsWithFuel = new Set(
+      (yesterdayStatuses || [])
+        .filter((s) => s.availability === 'AVAILABLE')
+        .map((s) => s.station_id)
+    ).size
+    
+    const fuelPercentageChange = yesterdayStationsWithFuel > 0
+      ? Math.round(((stationsWithFuel - yesterdayStationsWithFuel) / yesterdayStationsWithFuel) * 100)
+      : 0
 
     setStats({
       totalStations: allStations?.length || 0,
       stationsWithFuel,
       stationsOut,
       avgWaitingTime,
+      peakWaitingTime,
       stationsNoUpdate,
       contributionsLast2h: recentContributions?.length || 0,
+      fuelPercentageChange,
     })
 
     if (activeTab === 'stations') {
@@ -540,50 +570,140 @@ function AdminPageContent() {
 
       <header className="bg-gradient-to-r from-gray-800 to-gray-900 text-white sticky top-0 z-40 shadow-xl border-b-2 border-gray-700">
         <div className="px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Administration</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Panneau de contrôle</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/')}
+              className="text-gray-300 hover:text-white transition-colors"
+              title="Retour"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-xl font-bold">Administration</h1>
+              <p className="text-xs text-gray-400 mt-0.5">Panneau de contrôle</p>
+            </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-all hover:scale-105 flex items-center gap-2"
-            title="Se déconnecter"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="hidden sm:inline">Déconnexion</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Notifications />
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-all hover:scale-105 flex items-center gap-2"
+              title="Se déconnecter"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">Déconnexion</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="px-4 py-4">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-white mb-1">{stats.totalStations}</div>
-              <div className="text-sm text-gray-400 font-medium">Stations totales</div>
+          <div className="space-y-4">
+            {/* Main KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-blue-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-white mb-1">{stats.totalStations}</div>
+                <div className="text-sm text-gray-400 font-medium">Stations totales</div>
+              </Card>
+              <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-green-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-green-400 mb-1">{stats.stationsWithFuel}</div>
+                <div className="text-sm text-gray-400 font-medium">Avec carburant</div>
+                {stats.fuelPercentageChange !== 0 && (
+                  <div className={`text-xs mt-1 ${stats.fuelPercentageChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {stats.fuelPercentageChange > 0 ? '+' : ''}{stats.fuelPercentageChange}% vs hier
+                  </div>
+                )}
+              </Card>
+              <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-red-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-red-400 mb-1">{stats.stationsOut}</div>
+                <div className="text-sm text-gray-400 font-medium">En rupture</div>
+              </Card>
+              <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-yellow-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.avgWaitingTime} min</div>
+                <div className="text-sm text-gray-400 font-medium">Attente Moy.</div>
+                {stats.peakWaitingTime > 0 && (
+                  <div className="text-xs text-gray-500 mt-1">Pic: {stats.peakWaitingTime} min</div>
+                )}
+              </Card>
+            </div>
+
+            {/* 24h Trends Chart */}
+            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up">
+              <h3 className="text-lg font-bold text-white mb-4">Tendances d'attente (24h)</h3>
+              <WaitTimeTrendsChart />
             </Card>
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-green-400 mb-1">{stats.stationsWithFuel}</div>
-              <div className="text-sm text-gray-400 font-medium">Avec carburant</div>
-            </Card>
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-red-400 mb-1">{stats.stationsOut}</div>
-              <div className="text-sm text-gray-400 font-medium">En rupture</div>
-            </Card>
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-white mb-1">{stats.avgWaitingTime} min</div>
-              <div className="text-sm text-gray-400 font-medium">Attente moyenne</div>
-            </Card>
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.stationsNoUpdate}</div>
-              <div className="text-sm text-gray-400 font-medium">Sans mise à jour</div>
-            </Card>
-            <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up hover-lift transition-all">
-              <div className="text-3xl font-bold text-primary-teal mb-1">{stats.contributionsLast2h}</div>
-              <div className="text-sm text-gray-400 font-medium">Contributions (2h)</div>
-            </Card>
+
+            {/* Quick Action Buttons */}
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                onClick={() => setActiveTab('stations')}
+                className="p-4 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-xl hover:border-primary-teal transition-all flex flex-col items-center gap-2"
+              >
+                <div className="text-primary-teal">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white">Stations</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className="p-4 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-xl hover:border-blue-400 transition-all flex flex-col items-center gap-2"
+              >
+                <div className="text-blue-400">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white">Users</span>
+              </button>
+              <button
+                onClick={() => router.push('/admin')}
+                className="p-4 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-xl hover:border-purple-400 transition-all flex flex-col items-center gap-2"
+              >
+                <div className="text-purple-400">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white">Config</span>
+              </button>
+            </div>
           </div>
         )}
 

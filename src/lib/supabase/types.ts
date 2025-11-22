@@ -42,10 +42,23 @@ export type Database = {
           station_id: string | null
           is_verified: boolean
           must_change_password: boolean
+          notifications_enabled: boolean
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['user_profile']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['user_profile']['Insert']>
+      }
+      station_update_notification: {
+        Row: {
+          id: string
+          user_id: string
+          station_id: string
+          station_status_id: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['station_update_notification']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['station_update_notification']['Insert']>
       }
       contribution: {
         Row: {
@@ -93,6 +106,7 @@ export type StationStatus = Database['public']['Tables']['station_status']['Row'
 export type UserProfile = Database['public']['Tables']['user_profile']['Row']
 export type Contribution = Database['public']['Tables']['contribution']['Row']
 export type Alert = Database['public']['Tables']['alert']['Row']
+export type StationUpdateNotification = Database['public']['Tables']['station_update_notification']['Row']
 
 export type FuelType = 'ESSENCE' | 'GASOIL'
 export type Availability = 'AVAILABLE' | 'LIMITED' | 'OUT'
