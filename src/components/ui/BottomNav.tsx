@@ -129,6 +129,13 @@ export function BottomNav() {
   // Always add profile
   navItems.push(profileNavItem)
 
+  // Hide bottom nav on certain pages
+  const hideBottomNav = pathname === '/admin/map-picker' || pathname === '/login' || pathname === '/onboarding'
+  
+  if (hideBottomNav) {
+    return null
+  }
+
   // Show loading state with default nav (without role-specific items)
   if (loading) {
     const defaultNavItems: NavItem[] = [

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -19,8 +19,9 @@ interface ToastItem {
   message: string
 }
 
-export default function AdminPage() {
+function AdminPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<'overview' | 'stations' | 'alerts' | 'users'>('overview')
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -67,37 +68,15 @@ export default function AdminPage() {
   // Function to parse Google Maps URL and extract coordinates/name
   async function parseGoogleMapsUrl(url: string, showToastCallback?: (type: ToastType, message: string) => void): Promise<{ lat: number | null; lng: number | null; name: string | null }> {
     try {
-      // Handle shortened URLs (goo.gl, maps.app.goo.gl)
-      if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
-        try {
-          // Use API route to resolve shortened URL (avoids CORS issues)
-          const response = await fetch('/api/resolve-google-maps-url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url }),
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            const finalUrl = data.finalUrl || url
-            // Recursively parse the final URL
-            return await parseGoogleMapsUrl(finalUrl, showToastCallback)
-          } else {
-            if (showToastCallback) {
-              showToastCallback('warning', 'Impossible de résoudre le lien raccourci. Veuillez utiliser le lien complet.')
-            }
-            return { lat: null, lng: null, name: null }
-          }
-        } catch (err) {
-          console.error('Error resolving shortened URL:', err)
-          if (showToastCallback) {
-            showToastCallback('warning', 'Lien raccourci détecté. Veuillez utiliser le lien complet ou cliquer sur "Partager" puis "Copier le lien" dans Google Maps.')
-          }
-          return { lat: null, lng: null, name: null }
+      // maps.app.goo.gl short links are not supported
+      if (url.includes('maps.app.goo.gl')) {
+        if (showToastCallback) {
+          showToastCallback('error', '❌ Lien raccourci non supporté. Sur Google Maps web (navigateur): cherchez la station → copiez l\'URL depuis la barre d\'adresse.')
         }
+        return { lat: null, lng: null, name: null }
       }
 
-      // Format: https://www.google.com/maps/place/Name/@lat,lng,zoom
+      // Format 1: https://www.google.com/maps/place/Name/@lat,lng,zoom
       const placeMatch = url.match(/\/place\/([^/@]+)\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
       if (placeMatch) {
         const name = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '))
@@ -108,7 +87,17 @@ export default function AdminPage() {
         }
       }
 
-      // Format: https://maps.google.com/?q=lat,lng or ?q=name+at+lat,lng
+      // Format 2: https://www.google.com/maps/@lat,lng,zoom (mobile/desktop view)
+      const atMatch = url.match(/\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+      if (atMatch) {
+        const lat = parseFloat(atMatch[1])
+        const lng = parseFloat(atMatch[2])
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng, name: null }
+        }
+      }
+
+      // Format 3: https://maps.google.com/?q=lat,lng or ?q=name+at+lat,lng
       const qMatch = url.match(/[?&]q=([^&]+)/)
       if (qMatch) {
         const q = decodeURIComponent(qMatch[1])
@@ -124,21 +113,11 @@ export default function AdminPage() {
         }
       }
 
-      // Format: https://www.google.com/maps/search/?api=1&query=lat,lng
+      // Format 4: https://www.google.com/maps/search/?api=1&query=lat,lng
       const queryMatch = url.match(/[?&]query=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
       if (queryMatch) {
         const lat = parseFloat(queryMatch[1])
         const lng = parseFloat(queryMatch[2])
-        if (!isNaN(lat) && !isNaN(lng)) {
-          return { lat, lng, name: null }
-        }
-      }
-
-      // Format: https://www.google.com/maps/@lat,lng,zoom
-      const atMatch = url.match(/\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
-      if (atMatch) {
-        const lat = parseFloat(atMatch[1])
-        const lng = parseFloat(atMatch[2])
         if (!isNaN(lat) && !isNaN(lng)) {
           return { lat, lng, name: null }
         }
@@ -148,6 +127,7 @@ export default function AdminPage() {
     }
     return { lat: null, lng: null, name: null }
   }
+
 
   async function handleGoogleMapsUrlChange(url: string) {
     setNewStation((prev) => ({ ...prev, googleMapsUrl: url }))
@@ -163,13 +143,13 @@ export default function AdminPage() {
             name: parsed.name || prev.name,
           }))
           showToast('success', 'Coordonnées extraites depuis Google Maps !')
-        } else if (url.length > 20 && !url.includes('goo.gl')) {
+        } else if (url.length > 20 && !url.includes('goo.gl') && !url.includes('maps.app')) {
           // Only show warning if URL seems complete and not a short link
-            showToast('warning', 'Impossible d&apos;extraire les coordonnées. Vérifiez le format de l&apos;URL.')
+            showToast('warning', 'Format de lien non reconnu. Assurez-vous d&apos;avoir copié un lien Google Maps valide.')
         }
       } catch (err) {
         console.error('Error processing Google Maps URL:', err)
-        showToast('error', 'Erreur lors du traitement du lien. Essayez le lien complet.')
+        showToast('error', 'Erreur lors du traitement du lien. Vérifiez le format.')
       }
     }
   }
@@ -521,6 +501,31 @@ export default function AdminPage() {
     }
   }
 
+  // Check for map picker result from URL params
+  useEffect(() => {
+    const lat = searchParams.get('lat')
+    const lng = searchParams.get('lng')
+    const name = searchParams.get('name')
+
+    if (lat && lng) {
+      setNewStation((prev) => ({
+        ...prev,
+        latitude: lat,
+        longitude: lng,
+        name: name || prev.name,
+      }))
+      
+      // Switch to stations tab and open create form
+      setActiveTab('stations')
+      setShowCreateStation(true)
+      
+      showToast('success', '✓ Position sélectionnée sur la carte !')
+      
+      // Clean up URL params
+      window.history.replaceState({}, '', '/admin')
+    }
+  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -648,9 +653,22 @@ export default function AdminPage() {
                         Extraire
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Collez un lien Google Maps pour préremplir automatiquement les coordonnées
-                    </p>
+                    <div className="mt-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const params = new URLSearchParams({
+                            lat: newStation.latitude || '12.65',
+                            lng: newStation.longitude || '-8.0',
+                          })
+                          router.push(`/admin/map-picker?${params.toString()}`)
+                        }}
+                        fullWidth
+                      >
+                        🗺️ Chercher sur carte
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -1148,6 +1166,18 @@ export default function AdminPage() {
 
       <AdminBottomNav activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as any)} />
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-400">Chargement...</div>
+      </div>
+    }>
+      <AdminPageContent />
+    </Suspense>
   )
 }
 

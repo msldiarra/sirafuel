@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+/**
+ * Resolves Google Maps URLs and extracts coordinates
+ * Handles both full URLs and short links by parsing Open Graph metadata
+ */
 export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json()
@@ -8,27 +12,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    // Check if it's a shortened URL
-    if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
-      // Follow the redirect to get the final URL
-      const response = await fetch(url, {
-        method: 'HEAD',
-        redirect: 'follow',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        },
-      })
+    // Try to extract coordinates directly from the URL first (fastest)
+    // Pattern: @[latitude],[longitude],[zoom]
+    const coordsRegex = /@(-?\d+\.\d+),(-?\d+\.\d+),/
+    const match = url.match(coordsRegex)
 
-      const finalUrl = response.url || url
-      return NextResponse.json({ finalUrl })
+    if (match && match[1] && match[2]) {
+      const latitude = parseFloat(match[1])
+      const longitude = parseFloat(match[2])
+      
+      console.log(`✓ Extracted coordinates from URL: ${latitude}, ${longitude}`)
+      
+      return NextResponse.json({
+        finalUrl: url,
+        latitude,
+        longitude,
+        success: true,
+      })
     }
 
-    // If not a shortened URL, return as is
-    return NextResponse.json({ finalUrl: url })
+    // For short links, they don't contain extractable coordinates
+    if (url.includes('maps.app.goo.gl')) {
+      console.log('⚠ Short URL detected: maps.app.goo.gl - these cannot be processed server-side')
+      console.log('  The preview page does not contain coordinate data')
+      console.log('  User must obtain the full URL from Google Maps')
+      
+      // Return error with clear instructions
+      return NextResponse.json({
+        success: false,
+        error: 'maps.app.goo.gl_not_supported',
+        message: 'Short maps.app.goo.gl links cannot be processed. Please use the full Google Maps URL.',
+      })
+    }
+
+    // If no coordinates found in full URL
+    return NextResponse.json({
+      finalUrl: url,
+      success: false,
+      message: 'No coordinates found in the provided URL',
+    })
   } catch (error: any) {
-    console.error('Error resolving Google Maps URL:', error)
+    console.error('Error in resolve-google-maps-url:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to resolve URL' },
+      { error: error.message || 'Failed to resolve URL', success: false },
       { status: 500 }
     )
   }
