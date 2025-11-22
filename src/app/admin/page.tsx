@@ -662,7 +662,7 @@ function AdminPageContent() {
 
             {/* 24h Trends Chart */}
             <Card className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 animate-slide-in-up">
-              <h3 className="text-lg font-bold text-white mb-4">Tendances d'attente (24h)</h3>
+              <h3 className="text-lg font-bold text-white mb-4">Tendances d&apos;attente (24h)</h3>
               <WaitTimeTrendsChart />
             </Card>
 

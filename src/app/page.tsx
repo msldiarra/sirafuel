@@ -6,6 +6,7 @@ import { StationCard } from '@/components/StationCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/Button'
 import { RangeSlider } from '@/components/ui/RangeSlider'
+import { TajiCheckLogo } from '@/components/ui/TajiCheckLogo'
 import { calculateDistance } from '@/lib/utils'
 import type { Station, StationStatus } from '@/lib/supabase/types'
 import dynamic from 'next/dynamic'
@@ -230,9 +231,9 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-gray-800 text-white sticky top-0 z-40 shadow-lg border-b border-gray-700">
         <div className="px-4 py-3">
-          {/* Ligne 1 : Titre uniquement */}
+          {/* Ligne 1 : Logo uniquement */}
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold tracking-tight">SiraFuel</h1>
+            <TajiCheckLogo />
           </div>
 
           {/* Ligne 2 : Texte rayon + Bouton Carte - Only show when location is available */}

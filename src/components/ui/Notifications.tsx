@@ -38,6 +38,7 @@ export function Notifications() {
     return () => {
       if (unsubscribe) unsubscribe()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadNotifications() {
@@ -145,7 +146,7 @@ export function Notifications() {
       ? 'Nouvelle mise à jour de station disponible'
       : `${count} nouvelles mises à jour de stations disponibles`
 
-    const notification = new Notification('SiraFuel - Mise à jour', {
+    const notification = new Notification('TajiCheck - Mise à jour', {
       body: message,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
@@ -312,7 +313,7 @@ export function Notifications() {
       {notificationPermission === 'default' && showList && (
         <div className="fixed left-4 right-4 top-20 md:absolute md:right-0 md:top-full md:left-auto md:w-80 md:mt-2 bg-yellow-900/20 border-2 border-yellow-600 rounded-xl p-4 z-50">
           <p className="text-sm text-yellow-200 mb-2">
-            Activez les notifications push pour être alerté même quand l'application n'est pas ouverte.
+            Activez les notifications push pour être alerté même quand l&apos;application n&apos;est pas ouverte.
           </p>
           <button
             onClick={requestNotificationPermission}
@@ -364,7 +365,7 @@ export function Notifications() {
               <div className="p-8 text-center">
                 <div className="text-gray-400 mb-2">Aucune notification</div>
                 <div className="text-xs text-gray-500 mb-4">
-                  Les notifications apparaîtront ici lorsqu'une station sera mise à jour
+                  Les notifications apparaîtront ici lorsqu&apos;une station sera mise à jour
                 </div>
                 <div className="text-xs text-yellow-400">
                   💡 Activez les notifications dans votre profil pour recevoir des alertes

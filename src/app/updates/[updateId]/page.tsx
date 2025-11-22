@@ -21,6 +21,7 @@ export default function UpdateDetailPage() {
 
   useEffect(() => {
     loadUpdateData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateId])
 
   async function loadUpdateData() {
@@ -103,7 +104,7 @@ export default function UpdateDetailPage() {
         <div className="text-center">
           <div className="text-red-400 text-xl mb-2">❌ Mise à jour introuvable</div>
           <Button variant="primary" onClick={() => router.push('/')}>
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </Button>
         </div>
       </div>
@@ -185,7 +186,7 @@ export default function UpdateDetailPage() {
                     <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-gray-300 font-medium">Temps d'attente estimé</span>
+                    <span className="text-gray-300 font-medium">Temps d&apos;attente estimé</span>
                   </div>
                   <span className="text-lg font-bold text-yellow-400">
                     {status.waiting_time_min}-{status.waiting_time_max} min

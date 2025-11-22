@@ -1,6 +1,8 @@
-# SiraFuel
+# TajiCheck
 
 Plateforme participative de suivi de la disponibilité de carburant et des files d'attente au Mali.
+
+**Taji** = essence en bambara (littéralement "eau qui prend feu" 🔥)
 
 ## 🚀 Technologies
 
@@ -21,7 +23,7 @@ Plateforme participative de suivi de la disponibilité de carburant et des files
 1. **Cloner le projet**
 ```bash
 git clone <repository-url>
-cd sirafuel
+cd tajicheck
 ```
 
 2. **Installer les dépendances**

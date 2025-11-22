@@ -1,8 +1,9 @@
 {
-  "name": "SiraFuel - Disponibilité de carburant au Mali",
-  "short_name": "SiraFuel",
+  "name": "TajiCheck - Disponibilité de carburant au Mali",
+  "short_name": "TajiCheck",
   "description": "Plateforme participative de suivi de la disponibilité de carburant et des files d'attente au Mali",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#14B8A6",
